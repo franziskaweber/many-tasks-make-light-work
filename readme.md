@@ -49,13 +49,13 @@ Subsequently, examples of preprocessed VinDr-CXR images can be visualized with t
 
 ## Training
 
-To train the model on $T\in\{1, \dots, 4\}$ tasks, run
+To train the model on $T=1, \dots, 4$ tasks, run
 
 ```
 python train.py <path_to_repo>/experiments/exp_VINDR_low_res_<T>_train.py <F>
 ```
 
-for $F\in\left\{0, \dots, \dbinom{5}{T} - 1\right\}$, i.e., for $F\in\{0, \dots, 4\}$ if $T\in\{1,4\}$ and $F\in\{0, \dots, 9\}$ if $T\in\{2,3\}$.
+for $F=0, \dots, \binom{5}{T} - 1$, i.e., for $F=0, \dots, 4$ if $T=1,4$ and $F=0, \dots, 9$ if $T=2,3$.
 
 ## Prediction
 
