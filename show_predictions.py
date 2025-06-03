@@ -1,5 +1,6 @@
 import argparse
 
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy import ndimage
@@ -19,18 +20,18 @@ def main(exp_config, fold_name):
     test_dset_name: str
     test_dset_coordinator: DatasetCoordinator
 
-    ax_title_params = {'fontsize': 30, 'fontname': 'Times New Roman', 'pad': 15}
-    ax_row_params = {'fontsize': 30, 'fontname': 'Times New Roman', 'labelpad': 15}
+    ax_title_params = {'fontsize': 30, 'pad': 15}
+    ax_row_params = {'fontsize': 30, 'labelpad': 15}
     for test_dset_name, test_dset_coordinator in exp_config.test_dsets.items():
 
-        print(f'Visualising predictions on on {test_dset_name}')
+        print(f'Visualising predictions on custom VINDR-CXR test set')
 
-        dset_pred_dir = base_prediction_dir / exp_name / test_dset_name / fold_name
+        dset_pred_dir = base_prediction_dir / exp_name / fold_name
         assert dset_pred_dir.is_dir(), f'Missing predictions: {dset_pred_dir}'
 
         num_dims = test_dset_coordinator.dataset_dimensions()
 
-        example_indices = np.random.default_rng(seed=42).choice(len(test_dset_coordinator), NUM_EXAMPLES, replace=False)
+        example_indices = np.random.default_rng().choice(len(test_dset_coordinator), NUM_EXAMPLES, replace=False)
         test_dset_container = test_dset_coordinator.make_container(example_indices)
 
         if num_dims == 3:
@@ -83,8 +84,10 @@ def main(exp_config, fold_name):
             axes[0, 1].set_title('Label', **ax_title_params)
             axes[0, 2].set_title('Prediction', **ax_title_params)
 
-        fig.suptitle(test_dset_name, fontsize=30, fontname='Times New Roman')
-        plt.show()
+        fig.suptitle("custom VINDR-CXR test set", fontsize=30)
+        os.makedirs(f"{dset_pred_dir}/images/", exist_ok=True)
+        plt.savefig(f"{dset_pred_dir}/images/{example_id}.png")
+        break
 
 
 if __name__ == '__main__':

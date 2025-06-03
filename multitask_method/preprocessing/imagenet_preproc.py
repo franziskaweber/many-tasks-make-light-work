@@ -6,10 +6,12 @@ from torchvision.datasets import ImageNet
 from torchvision.transforms import Compose, Resize, ToTensor, Grayscale
 from tqdm import tqdm
 
+import sys
+sys.path.append('/many-tasks-make-light-work')
 from multitask_method.paths import base_data_input_dir
 
-raw_root = Path('/vol/biodata/data/imagenet')
-imagenet_output_dir = base_data_input_dir / 'imagenet'
+raw_root = Path('')
+imagenet_output_dir = Path('')
 
 full_res = 512
 low_res = 256
@@ -22,7 +24,7 @@ norm_transforms = Compose([ToTensor(),
 
 
 def make_torch_dset(root: Path, transforms=norm_transforms) -> ImageNet:
-    return ImageNet(root, split='train', transform=transforms)
+    return ImageNet(root, split='val', transform=transforms)
 
 
 def imagenet_preproc_func(torch_img):

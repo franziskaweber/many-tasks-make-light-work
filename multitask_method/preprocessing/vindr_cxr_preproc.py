@@ -11,7 +11,8 @@ import pydicom
 from skimage import exposure, transform
 from tqdm import tqdm
 
-
+import sys
+sys.path.append('./many-tasks-make-light-work')
 from multitask_method.paths import base_data_input_dir
 
 # Set output parameters
@@ -19,8 +20,8 @@ full_res = 512
 low_res = 256
 output_range = [-1., 1.]
 
-raw_root = Path('/vol/biodata/data/chest_xray/VinDr-CXR/1.0.0_raw')
-base_output_dir = base_data_input_dir / 'vindr_cxr'
+raw_root = Path('')
+base_output_dir = base_data_input_dir / 'preprocessed'
 
 # Debug - for disabling things during development
 debug_save_files = True

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-base_data_input_dir = Path('/mounted-data/my-biomedic3/multitask_method_data')
-base_prediction_dir = Path('/mounted-data/my-biomedic3/multitask_method_preds_tmp')
-base_log_dir = Path('/mounted-data/my-biomedic3/multitask-method/log')
+base_data_input_dir = Path('')
+base_prediction_dir = Path('')
+base_log_dir = Path('')
 
 ensemble_dir = 'ensemble'
 

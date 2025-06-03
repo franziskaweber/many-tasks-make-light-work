@@ -20,6 +20,7 @@ def construct_datasets(curr_dset_coord: DatasetCoordinator, other_dset_coord: Da
                        train_transforms: Optional[Callable[[npt.NDArray, npt.NDArray], Tuple[npt.NDArray, npt.NDArray]]],
                        dset_size_cap: Optional[int] = None, labeller: Optional[AnomalyLabeller] = None) \
         -> Tuple[TrainingDataset, TrainingDataset]:
+    print("Fold:", fold)
     assert 0 < num_train_tasks <= num_train_tasks, f'Invalid number of training tasks: {num_train_tasks}'
     assert curr_dset_coord.dataset_dimensions() == other_dset_coord.dataset_dimensions(), \
         'Dimensions of datasets must match!'

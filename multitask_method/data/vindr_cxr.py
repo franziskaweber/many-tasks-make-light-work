@@ -54,72 +54,20 @@ class VinDrCXRDatasetCoordinator(DatasetCoordinator):
 
         self.dset_folder = dataset_root / ('fullres' if fullres else 'lowres')
 
-        if ddad_split:
+        self.image_labels = pd.read_csv(self.dset_folder / (TRAIN_IMAGE_LABELS if train else TEST_IMAGE_LABELS))
+        self.annotations = pd.read_csv(self.dset_folder / (TRAIN_ANNOTATIONS if train else TEST_ANNOTATIONS))
+        self.sample_folder = self.dset_folder / (TRAIN if train else TEST)
 
-            with open(Path(__file__).parent / 'ddad_split.json', 'r') as f:
-                ddad_split = json.load(f)
+        if train:
+            image_labels_sum = self.image_labels.groupby('image_id')['No finding'].sum()
+            self.sample_ids = sorted(image_labels_sum[image_labels_sum == 3].index.tolist())
 
-            # DDAD train and test splits are taken from just the training data
-            self.image_labels = pd.read_csv(self.dset_folder / TRAIN_IMAGE_LABELS)
-            self.annotations = pd.read_csv(self.dset_folder / TRAIN_ANNOTATIONS)
-            self.sample_folder = self.dset_folder / TRAIN
-
-            all_train_label_sum = self.image_labels.groupby('image_id')['No finding'].sum()
-            all_train_healthy = sorted(all_train_label_sum[all_train_label_sum == 3].index.tolist())
-
-            # DDAD ids are file names, so we need to remove the .png extension
-            ddad_train_healthy = [f[:-4] for f in ddad_split['train']['0']]
-            assert len(ddad_train_healthy) == 4000
-            # No need for train unhealthy, since we only use healthy samples when training
-            ddad_test_healthy = [f[:-4] for f in ddad_split['test']['0']]
-            assert len(ddad_test_healthy) == 1000
-
-            # Filter out samples that are not FULLY healthy
-            ddad_train_healthy = [s for s in ddad_train_healthy if s in all_train_healthy]
-            assert len(ddad_train_healthy) == 3948
-            ddad_test_healthy = [s for s in ddad_test_healthy if s in all_train_healthy]
-            assert len(ddad_test_healthy) == 990
-
-            extra_healthy = [s for s in all_train_healthy if s not in ddad_train_healthy and s not in ddad_test_healthy]
-            assert len(extra_healthy) > (4000 - len(ddad_train_healthy)) + (1000 - len(ddad_test_healthy)), \
-                'Not enough healthy samples to pad DDAD split without overlapping the train and test sets'
-
-            # Pad train dataset with first samples from extra_healthy
-            padded_train_healthy = ddad_train_healthy + extra_healthy[: 4000 - len(ddad_train_healthy)]
-            assert len(padded_train_healthy) == 4000
-            # Pad test dataset with last samples from extra_healthy, to not overlap with train set
-            padded_test_healthy = ddad_test_healthy + extra_healthy[-(1000 - len(ddad_test_healthy)):]
-            assert len(padded_test_healthy) == 1000
-
-            overlap = set(padded_train_healthy).intersection(set(padded_test_healthy))
-            assert len(overlap) == 0, f'DDAD train and test sets overlap: {overlap}'
-
-            if train:
-                self.sample_ids = padded_train_healthy
-                assert len(self.sample_ids) == 4000
-            else:
-                ddad_test_unhealthy = [f[:-4] for f in ddad_split['test']['1']]
-                assert len(ddad_test_unhealthy) == 1000
-                assert all([s not in all_train_healthy for s in ddad_test_unhealthy]), \
-                    'DDAD test unhealthy samples are not unhealthy'
-
-                self.sample_ids = padded_test_healthy + ddad_test_unhealthy
-                assert len(self.sample_ids) == 2000
+            num_samples = len(self.sample_ids)
+            assert num_samples == 4000, f'Unexpected number of healthy samples in training set: {num_samples}'
         else:
-            self.image_labels = pd.read_csv(self.dset_folder / (TRAIN_IMAGE_LABELS if train else TEST_IMAGE_LABELS))
-            self.annotations = pd.read_csv(self.dset_folder / (TRAIN_ANNOTATIONS if train else TEST_ANNOTATIONS))
-            self.sample_folder = self.dset_folder / (TRAIN if train else TEST)
-
-            if train:
-                image_labels_sum = self.image_labels.groupby('image_id')['No finding'].sum()
-                self.sample_ids = sorted(image_labels_sum[image_labels_sum == 3].index.tolist())
-
-                num_samples = len(self.sample_ids)
-                assert num_samples == 10478, f'Unexpected number of healthy samples in training set: {num_samples}'
-            else:
-                self.sample_ids = sorted([f.stem for f in self.sample_folder.iterdir() if f.is_file()])
-                num_samples = len(self.sample_ids)
-                assert num_samples == 3000, f'Unexpected number of samples in test set: {num_samples}'
+            self.sample_ids = sorted([f.stem for f in self.sample_folder.iterdir() if f.is_file()])
+            num_samples = len(self.sample_ids)
+            assert num_samples == 2000, f'Unexpected number of samples in test set: {num_samples}'
 
         if sample_limit is not None:
             self.sample_ids = self.sample_ids[:sample_limit]

@@ -48,7 +48,7 @@ def main(exp_config, checkpoint_file):
         exp_fold_checkpoint_path = exp_log_dir(exp_name, fold) / checkpoint_file
 
         if exp_fold_checkpoint_path.is_file():
-            exp_fold_checkpoint = torch.load(exp_fold_checkpoint_path)
+            exp_fold_checkpoint = torch.load(exp_fold_checkpoint_path, weights_only=False)
             exp_fold_model = deepcopy(exp_config.model)
             exp_fold_model.load_state_dict(exp_fold_checkpoint["model_state_dict"])
             exp_fold_model.eval()
@@ -62,19 +62,19 @@ def main(exp_config, checkpoint_file):
     if num_folds_present == 0:
         print('No models found, aborting prediction')
         exit()
-    elif num_folds_present != num_folds:
-        res = input(f'Continue with {num_folds_present} available models? [Y/n]').lower()
-        if not (res == 'y' or res == ''):
-            exit()
+    # elif num_folds_present != num_folds:
+    #     res = input(f'Continue with {num_folds_present} available models? [Y/n]').lower()
+    #     if not (res == 'y' or res == ''):
+    #         exit()
 
     test_dset_name: str
     test_dset_coordinator: DatasetCoordinator
     for test_dset_name, test_dset_coordinator in exp_config.test_dsets.items():
 
-        print(f'Predicting on {test_dset_name}')
+        print(f'Predicting on custom VINDR-CXR test set')
         dset_pred_start = time.time()
 
-        dset_pred_dir = base_prediction_dir / exp_name / test_dset_name
+        dset_pred_dir = base_prediction_dir / exp_name
         dset_pred_dir.mkdir(parents=True, exist_ok=True)
 
         # Make folders to save predictions
@@ -83,13 +83,13 @@ def main(exp_config, checkpoint_file):
         for p_f in pred_folders.values():
             p_f.mkdir(exist_ok=True)
 
-        print(f'Loading test samples for {test_dset_name}')
+        print(f'Loading test samples for custom VINDR-CXR test set')
         test_dset_container = test_dset_coordinator.make_container(list(range(len(test_dset_coordinator))))
 
         # Get sample position encoding
         sample_pos_enc = torch.from_numpy(exp_config.pos_enc(test_dset_container[0][0].shape[1:])).float().to(device)
 
-        for i in tqdm(range(len(test_dset_container)), f'Predicting test samples for {test_dset_name}'):
+        for i in tqdm(range(len(test_dset_container)), f'Predicting test samples for custom VINDR-CXR test set'):
             np_sample_img, _, sample_id = test_dset_container[i]
 
             sample_preds = get_all_sample_predictions(np_sample_img, fold_models, device, sample_pos_enc)
@@ -97,7 +97,8 @@ def main(exp_config, checkpoint_file):
             for fold, pred in sample_preds.items():
                 np.save(pred_folders[fold] / f'{sample_id}.npy', pred)
 
-        print(f'Finished predicting on {test_dset_name} in {time.time() - dset_pred_start} seconds')
+        print(f'Finished predicting on custom VINDR-CXR test set in {time.time() - dset_pred_start} seconds')
+        break
 
 
 if __name__ == '__main__':

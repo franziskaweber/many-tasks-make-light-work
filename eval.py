@@ -19,23 +19,23 @@ def main(exp_config):
     test_dset_coordinator: DatasetCoordinator
     for test_dset_name, test_dset_coordinator in exp_config.test_dsets.items():
 
-        print(f'Evaluating on {test_dset_name}')
+        print(f'Evaluating on custom VINDR-CXR test set')
 
-        dset_pred_dir = base_prediction_dir / exp_name / test_dset_name
+        dset_pred_dir = base_prediction_dir / exp_name
 
         # Make folders to save predictions
         pred_folders: List[Path] = [p_dir for p_dir in dset_pred_dir.iterdir() if p_dir.is_dir()]
 
         print('Found prediction folders: ', pred_folders)
 
-        print(f'Loading test labels for {test_dset_name}')
+        print(f'Loading test labels for custom VINDR-CXR test set')
         all_test_data, sample_labels = get_test_anom_data(test_dset_coordinator)
 
         all_results = {}
         for p_dir in pred_folders:
             print('Computing metrics for predictions in ', p_dir)
 
-            pred_paths = sorted([p_f for p_f in p_dir.iterdir()])
+            pred_paths = sorted([p_f for p_f in p_dir.iterdir() if p_f.is_file()])
             assert len(sample_labels) == len(pred_paths), 'Different number of predictions vs labels'
             assert all([p_f.stem == l_f[2] for p_f, l_f in zip(pred_paths, all_test_data)]),\
                 'Mismatched prediction and label file names'
@@ -55,6 +55,8 @@ def main(exp_config):
 
         with open(results_save_path, 'w') as f:
             json.dump(all_results, f, indent=2)
+            
+        break
 
 
 if __name__ == '__main__':
